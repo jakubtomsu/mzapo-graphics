@@ -10,6 +10,7 @@
 #endif
 
 #define MZR_PACKED_POS_MAX UINT16_MAX
+#define MZR_PACKED_NORMAL_MAX UINT8_MAX
 #define MZR_PACKED_UV_MAX UINT8_MAX
 
 #define MZR_BASE_RESOLUTION_X 480
@@ -17,7 +18,7 @@
 #define MZR_RESOLUTION_X (MZR_BASE_RESOLUTION_X / MZR_PIXEL_SCALE)
 #define MZR_RESOLUTION_Y (MZR_BASE_RESOLUTION_Y / MZR_PIXEL_SCALE)
 
-typedef struct mzr_mesh_t {
+typedef struct mzr_mesh_ {
     int32_t     num_indices;
     int32_t     num_vertices;
     float       bounds_min_x;
@@ -30,10 +31,11 @@ typedef struct mzr_mesh_t {
     uint32_t*   indices;
     // Normalized integer positions mapped into the bounding box
     uint16_t*   vert_positions;
+    uint8_t*    vert_normals;
     uint8_t*    vert_uvs;
 } mzr_mesh_t;
 
-typedef struct mzr_texture_t {
+typedef struct mzr_texture_ {
     int32_t     size_x;
     int32_t     size_y;
     uint16_t*   pixels;
@@ -46,7 +48,6 @@ void mzr_clear_depth(float far);
 void mzr_draw_mesh(
     uint16_t*       framebuffer,
     mzr_mesh_t      mesh,
-    mzr_texture_t   texture,
     const float     mvp_data[16], // column-major model-view-projection matrix
     float           color_r,
     float           color_g,

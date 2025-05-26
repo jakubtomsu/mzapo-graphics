@@ -122,7 +122,7 @@ uint16_t cube_vert_positions[] = {
     0, 0, 0,
     MZR_PACKED_POS_MAX, 0, 0,
     0, 0, MZR_PACKED_POS_MAX,
-    MZR_PACKED_POS_MAX, 0, MZR_PACKED_POS_MAX,
+    MZR_PACKED_POS_MAX, MZR_PACKED_POS_MAX, MZR_PACKED_POS_MAX,
 };
 
 uint8_t cube_vert_uvs[] = {
@@ -132,12 +132,21 @@ uint8_t cube_vert_uvs[] = {
     MZR_PACKED_UV_MAX, MZR_PACKED_UV_MAX,
 };
 
+uint8_t cube_vert_normals[] = {
+    MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX    , MZR_PACKED_NORMAL_MAX / 2,
+    MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX    , MZR_PACKED_NORMAL_MAX / 2,
+    MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX    , MZR_PACKED_NORMAL_MAX / 2,
+    MZR_PACKED_NORMAL_MAX / 6, MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX / 6,
+};
+
 uint16_t tex_pixels[] = {
     0x00ff, 0x00ff, 0x00ff, 0x00ff,
     0x00ff, 0x0000, 0xffff, 0x00ff,
     0x00ff, 0xffff, 0x0000, 0x00ff,
     0x00ff, 0x00ff, 0x00ff, 0x00ff,
 };
+
+#include "assets.h"
 
 mat4 camera_calc_view_projection(
     float camera_dist,
@@ -181,6 +190,7 @@ void _app_frame(void) {
     mesh.num_vertices = ARRAY_LEN(cube_vert_positions) / 3;
     mesh.vert_positions = cube_vert_positions;
     mesh.vert_uvs = cube_vert_uvs;
+    mesh.vert_normals = cube_vert_normals;
 
     float camera_yaw = (float)g_state.frame_index * 0.01;
     float camera_dist = 4.0f + sinf((float)g_state.frame_index * 0.005);
@@ -192,7 +202,8 @@ void _app_frame(void) {
     tex.size_y = 4;
     tex.pixels = tex_pixels;
 
-    mzr_draw_mesh(g_framebuf_rgb565, mesh, tex, mvp.data, 1.0f, 0.0f, 1.0f);
+    // mzr_draw_mesh(g_framebuf_rgb565, mesh, mvp.data, 1.0f, 0.0f, 1.0f);
+    mzr_draw_mesh(g_framebuf_rgb565, slayer_model, mvp.data, 1.0f, 0.0f, 1.0f);
 
     for (int i = 0; i < MZR_RESOLUTION_X * MZR_RESOLUTION_Y; i++) {
         uint16_t src = g_framebuf_rgb565[i];

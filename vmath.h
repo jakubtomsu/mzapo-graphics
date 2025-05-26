@@ -301,6 +301,20 @@ static inline vec4 vec4_max(vec4 a, vec4 b) {
     return result;
 }
 
+static inline vec4 vec4_rsqrt(vec4 a) {
+    vec4 result = {0};
+#ifdef VMATH_USE_NEON
+    result.neon_f32x4 = vrsqrte_f32(a.neon_f32x4);
+#else
+    result.x = 1.0 / sqrtf(a.x);
+    result.y = 1.0 / sqrtf(a.y);
+    result.z = 1.0 / sqrtf(a.z);
+    result.w = 1.0 / sqrtf(a.w);
+#endif
+    return result;
+}
+
+
 static inline vec4i vec4_to_vec4i(vec4 a) {
     vec4i result = {0};
     result.x = (int)a.x;
