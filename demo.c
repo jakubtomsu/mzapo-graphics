@@ -14,6 +14,10 @@
 #include "sokol_gfx.h"
 #include "sokol_glue.h"
 #include "sokol_log.h"
+
+#undef far
+#undef near
+
 #include "shaders.h"
 #include "mzapo_renderer.h"
 #include "vmath.h"

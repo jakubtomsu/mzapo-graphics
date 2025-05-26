@@ -16,7 +16,7 @@
 #ifdef __ARM_NEON
 #define VMATH_USE_NEON
 #else
-#warning "No NEON!"
+// no NEON!
 #endif
 
 #ifdef VMATH_USE_NEON

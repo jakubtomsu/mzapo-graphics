@@ -6,7 +6,7 @@
 // Higher the number, lower the resolution.
 // Useful to improve performance, since pixel fill rate tends to be the bottleneck.
 #ifndef MZR_PIXEL_SCALE
-#define MZR_PIXEL_SCALE 2
+#define MZR_PIXEL_SCALE 1
 #endif
 
 #define MZR_PACKED_POS_MAX UINT16_MAX
