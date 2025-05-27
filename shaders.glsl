@@ -1,5 +1,6 @@
 /* quad vertex shader */
 @vs vs
+@glsl_options flip_vert_y
 in vec2 position;
 out vec2 uv;
 

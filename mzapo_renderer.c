@@ -98,84 +98,26 @@ void mzr_draw_mesh(
     const float  color_g,
     const float  color_b
 ) {
-    vec4 bounds_min = vec4_make(
-        mesh.bounds_min_x,
-        mesh.bounds_min_y,
-        mesh.bounds_min_z,
-        0.0f);
-    vec4 bounds_scale = vec4_make(
-        (mesh.bounds_max_x - mesh.bounds_min_x) / (float)MZR_PACKED_POS_MAX,
-        (mesh.bounds_max_y - mesh.bounds_min_y) / (float)MZR_PACKED_POS_MAX,
-        (mesh.bounds_max_z - mesh.bounds_min_z) / (float)MZR_PACKED_POS_MAX,
-        1.0f);
-
     mat4 mvp = {0};
     memcpy(mvp.data, mvp_data, sizeof(mat4));
 
-    int tri_num = mesh.num_indices / 3;
-    printf("Drawing mesh with %i triangles\n", tri_num);
+    int tri_num = mesh.num_vertices / 3;
     for(int tri_index = 0; tri_index < tri_num; tri_index++) {
-        uint32_t index0 = mesh.indices[tri_index * 3 + 0];
-        uint32_t index1 = mesh.indices[tri_index * 3 + 1];
-        uint32_t index2 = mesh.indices[tri_index * 3 + 2];
-
-        printf("Triangle %i: %i/%i/%i\n", tri_index, index0, index1, index2);
-
         vec4 v0 = vec4_make(
-            mesh.vert_positions[index0 * 3 + 0],
-            mesh.vert_positions[index0 * 3 + 1],
-            mesh.vert_positions[index0 * 3 + 2],
+            mesh.vert_positions[tri_index * 9 + 0 + 0],
+            mesh.vert_positions[tri_index * 9 + 0 + 1],
+            mesh.vert_positions[tri_index * 9 + 0 + 2],
             1.0);
         vec4 v1 = vec4_make(
-            mesh.vert_positions[index1 * 3 + 0],
-            mesh.vert_positions[index1 * 3 + 1],
-            mesh.vert_positions[index1 * 3 + 2],
+            mesh.vert_positions[tri_index * 9 + 3 + 0],
+            mesh.vert_positions[tri_index * 9 + 3 + 1],
+            mesh.vert_positions[tri_index * 9 + 3 + 2],
             1.0);
         vec4 v2 = vec4_make(
-            mesh.vert_positions[index2 * 3 + 0],
-            mesh.vert_positions[index2 * 3 + 1],
-            mesh.vert_positions[index2 * 3 + 2],
+            mesh.vert_positions[tri_index * 9 + 6 + 0],
+            mesh.vert_positions[tri_index * 9 + 6 + 1],
+            mesh.vert_positions[tri_index * 9 + 6 + 2],
             1.0);
-
-        v0 = vec4_add(bounds_min, vec4_mul(v0, bounds_scale));
-        v1 = vec4_add(bounds_min, vec4_mul(v1, bounds_scale));
-        v2 = vec4_add(bounds_min, vec4_mul(v2, bounds_scale));
-
-        // Normals are packed in 0..255 range so we need to center them and normalize
-        vec4 normal0 = vec3_normalize(
-            vec4_add(
-                vec4_make(
-                    (float)mesh.vert_normals[index0 * 3 + 0] / (float)MZR_PACKED_NORMAL_MAX,
-                    (float)mesh.vert_normals[index0 * 3 + 1] / (float)MZR_PACKED_NORMAL_MAX,
-                    (float)mesh.vert_normals[index0 * 3 + 2] / (float)MZR_PACKED_NORMAL_MAX,
-                    0.0),
-                vec4_make(-0.5, -0.5, -0.5, 0.0)));
-        vec4 normal1 = vec3_normalize(
-            vec4_add(
-                vec4_make(
-                    (float)mesh.vert_normals[index1 * 3 + 0] / (float)MZR_PACKED_NORMAL_MAX,
-                    (float)mesh.vert_normals[index1 * 3 + 1] / (float)MZR_PACKED_NORMAL_MAX,
-                    (float)mesh.vert_normals[index1 * 3 + 2] / (float)MZR_PACKED_NORMAL_MAX,
-                    0.0),
-                vec4_make(-0.5, -0.5, -0.5, 0.0)));
-        vec4 normal2 = vec3_normalize(
-            vec4_add(
-                vec4_make(
-                    (float)mesh.vert_normals[index2 * 3 + 0] / (float)MZR_PACKED_NORMAL_MAX,
-                    (float)mesh.vert_normals[index2 * 3 + 1] / (float)MZR_PACKED_NORMAL_MAX,
-                    (float)mesh.vert_normals[index2 * 3 + 2] / (float)MZR_PACKED_NORMAL_MAX,
-                    0.0),
-                vec4_make(-0.5, -0.5, -0.5, 0.0)));
-
-        // float2 uv0 = float2_make(
-        //     (float)mesh.vert_uvs[index0 * 2 + 0] / (float)MZR_PACKED_UV_MAX,
-        //     (float)mesh.vert_uvs[index0 * 2 + 1] / (float)MZR_PACKED_UV_MAX);
-        // float2 uv1 = float2_make(
-        //     (float)mesh.vert_uvs[index1 * 2 + 0] / (float)MZR_PACKED_UV_MAX,
-        //     (float)mesh.vert_uvs[index1 * 2 + 1] / (float)MZR_PACKED_UV_MAX);
-        // float2 uv2 = float2_make(
-        //     (float)mesh.vert_uvs[index2 * 2 + 0] / (float)MZR_PACKED_UV_MAX,
-        //     (float)mesh.vert_uvs[index2 * 2 + 1] / (float)MZR_PACKED_UV_MAX);
 
         vec4 flat_normal = vec3_normalize(vec3_cross(
             vec4_sub(v1, v0),
@@ -196,8 +138,6 @@ void mzr_draw_mesh(
         }
 
         vec4 inv_area = vec4_make_scalar(1.0 / area);
-
-        // float linear_z = near * far / (far - v0.z * (far - near));
 
         // TODO: move into mvp?
         v0.x = (v0.x * 0.5 + 0.5) * MZR_RESOLUTION_X;
@@ -300,94 +240,14 @@ void mzr_draw_mesh(
                 if (mask.z != 0) tile->data[tile_sub_x + 1][tile_sub_y + 0] = min_depth.z;
                 if (mask.w != 0) tile->data[tile_sub_x + 1][tile_sub_y + 1] = min_depth.w;
 
-                // vec4 uv_x =
-                //     vec4_add(
-                //         vec4_mul(w0a, vec4_make_scalar(uv0.x)),
-                //         vec4_add(
-                //             vec4_mul(w1a, vec4_make_scalar(uv1.x)),
-                //             vec4_mul(w2a, vec4_make_scalar(uv2.x))));
-                // vec4 uv_y =
-                //     vec4_add(
-                //         vec4_mul(w0a, vec4_make_scalar(uv0.y)),
-                //         vec4_add(
-                //             vec4_mul(w1a, vec4_make_scalar(uv1.y)),
-                //             vec4_mul(w2a, vec4_make_scalar(uv2.y))));
+                vec4 col_r = vec4_make_scalar(color_r);
+                vec4 col_g = vec4_make_scalar(color_g);
+                vec4 col_b = vec4_make_scalar(color_b);
 
-
-                // vec4i texcoord_x = vec4i_max(
-                //     vec4i_make_scalar(0),
-                //     vec4i_min(
-                //         vec4i_make_scalar(texture.size_x - 1),
-                //         vec4_to_vec4i(vec4_mul(uv_x, vec4_make_scalar(texture.size_x)))));
-                // vec4i texcoord_y = vec4i_max(
-                //     vec4i_make_scalar(0),
-                //     vec4i_min(
-                //         vec4i_make_scalar(texture.size_y - 1),
-                //         vec4_to_vec4i(vec4_mul(uv_y, vec4_make_scalar(texture.size_y)))));
-
-                // uint16_t tex_colors[4] = {
-                //     texture.pixels[texcoord_x.x + texcoord_y.x * texture.size_x],
-                //     texture.pixels[texcoord_x.y + texcoord_y.y * texture.size_x],
-                //     texture.pixels[texcoord_x.z + texcoord_y.z * texture.size_x],
-                //     texture.pixels[texcoord_x.w + texcoord_y.w * texture.size_x],
-                // };
-
-                // vec4 normal_x =
-                //     vec4_add(
-                //         vec4_mul(w0a, vec4_make_scalar(normal0.x)),
-                //         vec4_add(
-                //             vec4_mul(w1a, vec4_make_scalar(normal1.x)),
-                //             vec4_mul(w2a, vec4_make_scalar(normal2.x))));
-                // vec4 normal_y =
-                //     vec4_add(
-                //         vec4_mul(w0a, vec4_make_scalar(normal0.y)),
-                //         vec4_add(
-                //             vec4_mul(w1a, vec4_make_scalar(normal1.y)),
-                //             vec4_mul(w2a, vec4_make_scalar(normal2.y))));
-                // vec4 normal_z =
-                //     vec4_add(
-                //         vec4_mul(w0a, vec4_make_scalar(normal0.z)),
-                //         vec4_add(
-                //             vec4_mul(w1a, vec4_make_scalar(normal1.z)),
-                //             vec4_mul(w2a, vec4_make_scalar(normal2.z))));
-
-                // vec4 normal_unit_factor = vec4_rsqrt(
-                //     vec4_add(
-                //         vec4_mul(normal_x, normal_x),
-                //         vec4_add(
-                //             vec4_mul(normal_y, normal_y),
-                //             vec4_mul(normal_z, normal_z))));
-
-                // normal_x = vec4_mul(normal_x, normal_unit_factor);
-                // normal_y = vec4_mul(normal_y, normal_unit_factor);
-                // normal_z = vec4_mul(normal_z, normal_unit_factor);
-
-                vec4 col_r = flat_normal; //vec4_add(vec4_make_scalar(0.5f), vec4_mul(vec4_make_scalar(0.5f), normal_x));
-                vec4 col_g = flat_normal; //vec4_add(vec4_make_scalar(0.5f), vec4_mul(vec4_make_scalar(0.5f), normal_y));
-                vec4 col_b = flat_normal; //vec4_add(vec4_make_scalar(0.5f), vec4_mul(vec4_make_scalar(0.5f), normal_z));
-
-                // vec4 ndotl = vec4_add(
-                //     vec4_mul(normal_x, vec4_make_scalar(0.3)),
-                //     vec4_add(
-                //         vec4_mul(normal_x, vec4_make_scalar(0.8)),
-                //         vec4_mul(normal_x, vec4_make_scalar(0.5))));
-
-                // vec4 diffuse =
-                //     vec4_add(
-                //         vec4_make_scalar(0.5f),
-                //         vec4_mul(
-                //             vec4_make_scalar(0.5f),
-                //             vec4_max(
-                //                 vec4_make_scalar(0.0),
-                //                 ndotl)));
-
-                // col_r = vec4_mul(col_r, vec4_make_scalar(diffuse));
-                // col_g = vec4_mul(col_g, vec4_make_scalar(diffuse));
-                // col_b = vec4_mul(col_b, vec4_make_scalar(diffuse));
-
-                // col_b = vec4_make_scalar(
-                //     0.1f * (1.0f - float_max(0.0, normal.y) * float_max(0.0, normal.y))
-                // );
+                float diffuse = 0.5 + 0.5f * float_max(0.0, vec3_dot(flat_normal, vec4_make(0.3, 0.8, 0.5, 0.0)));
+                col_r = vec4_mul(col_r, vec4_make_scalar(diffuse));
+                col_g = vec4_mul(col_g, vec4_make_scalar(diffuse));
+                col_b = vec4_mul(col_b, vec4_make_scalar(diffuse));
 
                 // // Pack colors to RGB565
                 col_r = vec4_scale(col_r, 31.0);

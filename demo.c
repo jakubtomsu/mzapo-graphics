@@ -18,12 +18,18 @@
 #undef far
 #undef near
 
+#include "model.h"
+
 #include "shaders.h"
 #include "mzapo_renderer.h"
 #include "vmath.h"
 
 #define WINDOW_SCALE 2
 #define ARRAY_LEN(arr) (sizeof(arr) / sizeof(arr[0]))
+
+// The emulation layer has to convert to a different format before uploading to the GPU.
+uint32_t g_framebuf_rgba8[MZR_RESOLUTION_X * MZR_RESOLUTION_Y];
+uint16_t g_framebuf_rgb565[MZR_RESOLUTION_X * MZR_RESOLUTION_Y];
 
 typedef struct {
   sg_pass_action pass_action;
@@ -108,45 +114,12 @@ void _app_cleanup(void) {
 
 void _app_event(const sapp_event *event) {}
 
-
-// The emulation layer has to convert to a different format before uploading to the GPU.
-uint32_t g_framebuf_rgba8[MZR_RESOLUTION_X * MZR_RESOLUTION_Y];
-uint16_t g_framebuf_rgb565[MZR_RESOLUTION_X * MZR_RESOLUTION_Y];
-
-uint32_t cube_indices[] = {
-    0, 1, 2,
-    1, 3, 2,
-};
-
-uint16_t cube_vert_positions[] = {
-    0, 0, 0,
-    MZR_PACKED_POS_MAX, 0, 0,
-    0, 0, MZR_PACKED_POS_MAX,
-    MZR_PACKED_POS_MAX, MZR_PACKED_POS_MAX, MZR_PACKED_POS_MAX,
-};
-
-uint8_t cube_vert_uvs[] = {
-    0, 0,
-    MZR_PACKED_UV_MAX, 0,
-    0, MZR_PACKED_UV_MAX,
-    MZR_PACKED_UV_MAX, MZR_PACKED_UV_MAX,
-};
-
-uint8_t cube_vert_normals[] = {
-    MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX    , MZR_PACKED_NORMAL_MAX / 2,
-    MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX    , MZR_PACKED_NORMAL_MAX / 2,
-    MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX    , MZR_PACKED_NORMAL_MAX / 2,
-    MZR_PACKED_NORMAL_MAX / 6, MZR_PACKED_NORMAL_MAX / 2, MZR_PACKED_NORMAL_MAX / 6,
-};
-
 uint16_t tex_pixels[] = {
     0x00ff, 0x00ff, 0x00ff, 0x00ff,
     0x00ff, 0x0000, 0xffff, 0x00ff,
     0x00ff, 0xffff, 0x0000, 0x00ff,
     0x00ff, 0x00ff, 0x00ff, 0x00ff,
 };
-
-#include "assets.h"
 
 mat4 camera_calc_view_projection(
     float camera_dist,
@@ -179,31 +152,16 @@ void _app_frame(void) {
     mzr_clear_depth(1e20f);
 
     mzr_mesh_t mesh = {0};
-    mesh.bounds_min_x = -1.0f;
-    mesh.bounds_min_y = -1.0f;
-    mesh.bounds_min_z = -1.0f;
-    mesh.bounds_max_x =  1.0f;
-    mesh.bounds_max_y =  1.0f;
-    mesh.bounds_max_z =  1.0f;
-    mesh.num_indices = ARRAY_LEN(cube_indices);
-    mesh.indices = cube_indices;
-    mesh.num_vertices = ARRAY_LEN(cube_vert_positions) / 3;
-    mesh.vert_positions = cube_vert_positions;
-    mesh.vert_uvs = cube_vert_uvs;
-    mesh.vert_normals = cube_vert_normals;
+    mesh.num_vertices = ARRAY_LEN(vertices) / 3;
+    mesh.vert_positions = vertices;
 
     float camera_yaw = (float)g_state.frame_index * 0.01;
-    float camera_dist = 4.0f + sinf((float)g_state.frame_index * 0.005);
+    float camera_dist = 3.0f + sinf((float)g_state.frame_index * 0.003);
     mat4 mvp = {0};
-    mvp = camera_calc_view_projection(camera_dist, camera_yaw, 0.5);
-
-    mzr_texture_t tex = {0};
-    tex.size_x = 4;
-    tex.size_y = 4;
-    tex.pixels = tex_pixels;
+    mvp = camera_calc_view_projection(camera_dist, camera_yaw, -0.4);
 
     // mzr_draw_mesh(g_framebuf_rgb565, mesh, mvp.data, 1.0f, 0.0f, 1.0f);
-    mzr_draw_mesh(g_framebuf_rgb565, slayer_model, mvp.data, 1.0f, 0.0f, 1.0f);
+    mzr_draw_mesh(g_framebuf_rgb565, mesh, mvp.data, 1.0f, 0.48f, 0.03f);
 
     for (int i = 0; i < MZR_RESOLUTION_X * MZR_RESOLUTION_Y; i++) {
         uint16_t src = g_framebuf_rgb565[i];

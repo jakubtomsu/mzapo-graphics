@@ -1,2 +1,8 @@
 *.o
 *.out
+*.exe
+*.obj
+*.ilk
+*.pdb
+
+!assets/*
