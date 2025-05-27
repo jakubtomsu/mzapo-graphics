@@ -23,6 +23,7 @@ clang demo.c
 ```
 
 ### Shaders
+> Note: you don't need to compile shaders unless you want to change them. The precompiled shaders already are in `shaders.h`
 The desktop sokol-based backend uses a single tiny GPU shader to display
 our CPU-rendered texture to the screen.
 
